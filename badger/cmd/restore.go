@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/kinet-labs/badger/v4"
+	"github.com/dgraph-io/badger/v4"
 )
 
 var restoreFile string

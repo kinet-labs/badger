@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kinet-labs/badger/v4/options"
+	"github.com/dgraph-io/badger/v4/options"
 )
 
 func TestOptions(t *testing.T) {

@@ -20,9 +20,9 @@ import (
 	"time"
 
 
-	"github.com/kinet-labs/badger/v4/pb"
-	"github.com/kinet-labs/badger/v4/table"
-	"github.com/kinet-labs/badger/v4/y"
+	"github.com/dgraph-io/badger/v4/pb"
+	"github.com/dgraph-io/badger/v4/table"
+	"github.com/dgraph-io/badger/v4/y"
 	"github.com/dgraph-io/ristretto/v2/z"
 )
 

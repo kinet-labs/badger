@@ -23,12 +23,11 @@ import (
 
 	"github.com/klauspost/compress/snappy"
 	"github.com/klauspost/compress/zstd"
-	"google.golang.org/protobuf/proto"
 
-	"github.com/kinet-labs/badger/v4/fb"
-	"github.com/kinet-labs/badger/v4/options"
-	"github.com/kinet-labs/badger/v4/pb"
-	"github.com/kinet-labs/badger/v4/y"
+	"github.com/dgraph-io/badger/v4/fb"
+	"github.com/dgraph-io/badger/v4/options"
+	"github.com/dgraph-io/badger/v4/pb"
+	"github.com/dgraph-io/badger/v4/y"
 	"github.com/dgraph-io/ristretto/v2"
 	"github.com/dgraph-io/ristretto/v2/z"
 )
@@ -236,7 +235,7 @@ func (b *Block) size() int64 {
 
 func (b *Block) verifyCheckSum() error {
 	cs := &pb.Checksum{}
-	if err := proto.Unmarshal(b.checksum, cs); err != nil {
+	if err := pb.Unmarshal(b.checksum, cs); err != nil {
 		return y.Wrapf(err, "unable to unmarshal checksum for block")
 	}
 	return y.VerifyChecksum(b.data, cs)
@@ -369,7 +368,7 @@ func (t *Table) initBiggestAndSmallest() error {
 			checksum := &pb.Checksum{}
 			readPos -= checksumLen
 			buf = t.readNoFail(readPos, checksumLen)
-			_ = proto.Unmarshal(buf, checksum)
+			_ = pb.Unmarshal(buf, checksum)
 			fmt.Fprintf(&debugBuf, "checksum: %+v ", checksum)
 
 			// Read index size from the footer.
@@ -431,7 +430,7 @@ func (t *Table) initIndex() (*fb.BlockOffset, error) {
 	expectedChk := &pb.Checksum{}
 	readPos -= checksumLen
 	buf = t.readNoFail(readPos, checksumLen)
-	if err := proto.Unmarshal(buf, expectedChk); err != nil {
+	if err := pb.Unmarshal(buf, expectedChk); err != nil {
 		return nil, err
 	}
 

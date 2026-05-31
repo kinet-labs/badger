@@ -12,8 +12,8 @@ import (
 	"math"
 	"sync"
 
-	"github.com/kinet-labs/badger/v4/table"
-	"github.com/kinet-labs/badger/v4/y"
+	"github.com/dgraph-io/badger/v4/table"
+	"github.com/dgraph-io/badger/v4/y"
 )
 
 type keyRange struct {

@@ -16,12 +16,11 @@ import (
 
 	fbs "github.com/google/flatbuffers/go"
 	"github.com/klauspost/compress/s2"
-	"google.golang.org/protobuf/proto"
 
-	"github.com/kinet-labs/badger/v4/fb"
-	"github.com/kinet-labs/badger/v4/options"
-	"github.com/kinet-labs/badger/v4/pb"
-	"github.com/kinet-labs/badger/v4/y"
+	"github.com/dgraph-io/badger/v4/fb"
+	"github.com/dgraph-io/badger/v4/options"
+	"github.com/dgraph-io/badger/v4/pb"
+	"github.com/dgraph-io/badger/v4/y"
 	"github.com/dgraph-io/ristretto/v2/z"
 )
 
@@ -467,7 +466,7 @@ func (b *Builder) calculateChecksum(data []byte) []byte {
 	}
 
 	// Write checksum to the file.
-	chksum, err := proto.Marshal(&checksum)
+	chksum, err := pb.Marshal(&checksum)
 	y.Check(err)
 	// Write checksum size.
 	return chksum
