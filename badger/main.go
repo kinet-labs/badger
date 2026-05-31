@@ -12,6 +12,7 @@ import (
 	"runtime"
 
 	"github.com/dustin/go-humanize"
+	"go.opentelemetry.io/contrib/zpages"
 
 	"github.com/dgraph-io/badger/v4/badger/cmd"
 	"github.com/dgraph-io/ristretto/v2/z"
@@ -28,6 +29,7 @@ func main() {
 			}
 		}
 	}()
+	http.DefaultServeMux.Handle("/z", zpages.NewTracezHandler(zpages.NewSpanProcessor()))
 	runtime.SetBlockProfileRate(100)
 	runtime.GOMAXPROCS(128)
 

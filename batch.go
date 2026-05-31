@@ -11,6 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/dgraph-io/badger/v4/pb"
 	"github.com/dgraph-io/badger/v4/y"
 	"github.com/dgraph-io/ristretto/v2/z"
@@ -102,7 +104,7 @@ func (wb *WriteBatch) Write(buf *z.Buffer) error {
 
 	err := buf.SliceIterate(func(s []byte) error {
 		kv := &pb.KV{}
-		if err := pb.Unmarshal(s, kv); err != nil {
+		if err := proto.Unmarshal(s, kv); err != nil {
 			return err
 		}
 		return wb.writeKV(kv)

@@ -7,6 +7,7 @@ package badger
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"hash"
@@ -20,6 +21,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/dgraph-io/badger/v4/y"
 	"github.com/dgraph-io/ristretto/v2/z"
@@ -1049,6 +1052,9 @@ func discardEntry(e Entry, vs y.ValueStruct, db *DB) bool {
 }
 
 func (vlog *valueLog) doRunGC(lf *logFile) error {
+	_, span := otel.Tracer("").Start(context.TODO(), "Badger.GC")
+	span.SetAttributes(attribute.String("GC rewrite for", lf.path))
+	defer span.End()
 	if err := vlog.rewrite(lf); err != nil {
 		return err
 	}
