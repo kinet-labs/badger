@@ -7,7 +7,6 @@ package badger
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"hash"
@@ -21,8 +20,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/dgraph-io/badger/v4/y"
 	"github.com/dgraph-io/ristretto/v2/z"
@@ -181,10 +178,6 @@ func (vlog *valueLog) rewrite(f *logFile) error {
 		count++
 		if count%100000 == 0 {
 			vlog.opt.Debugf("Processing entry %d", count)
-		}
-
-		if isDeletedOrExpired(e.meta, e.ExpiresAt) {
-			return nil
 		}
 
 		vs, err := vlog.db.get(e.Key)
@@ -544,10 +537,6 @@ func (vlog *valueLog) init(db *DB) {
 	}
 	vlog.dirPath = vlog.opt.ValueDir
 
-	if vlog.opt.ReadOnly {
-		return
-	}
-
 	vlog.garbageCh = make(chan struct{}, 1) // Only allow one GC at a time.
 	lf, err := InitDiscardStats(vlog.opt)
 	y.Check(err)
@@ -579,17 +568,14 @@ func (vlog *valueLog) open(db *DB) error {
 		lf, ok := vlog.filesMap[fid]
 		y.AssertTrue(ok)
 
+		// Just open in RDWR mode. This should not create a new log file.
 		lf.opt = vlog.opt
-		flags := os.O_RDWR
-		if vlog.opt.ReadOnly {
-			flags = os.O_RDONLY
-		}
-		if err := lf.open(vlog.fpath(fid), flags,
+		if err := lf.open(vlog.fpath(fid), os.O_RDWR,
 			2*vlog.opt.ValueLogFileSize); err != nil {
 			return y.Wrapf(err, "Open existing file: %q", lf.path)
 		}
 		// We shouldn't delete the maxFid file.
-		if lf.size.Load() == vlogHeaderSize && fid != vlog.maxFid && !vlog.opt.ReadOnly {
+		if lf.size.Load() == vlogHeaderSize && fid != vlog.maxFid {
 			vlog.opt.Infof("Deleting empty file: %s", lf.path)
 			if err := lf.Delete(); err != nil {
 				return y.Wrapf(err, "while trying to delete empty file: %s", lf.path)
@@ -1048,6 +1034,9 @@ func discardEntry(e Entry, vs y.ValueStruct, db *DB) bool {
 		// Version not found. Discard.
 		return true
 	}
+	if isDeletedOrExpired(vs.Meta, vs.ExpiresAt) {
+		return true
+	}
 	if (vs.Meta & bitValuePointer) == 0 {
 		// Key also stores the value in LSM. Discard.
 		return true
@@ -1060,9 +1049,6 @@ func discardEntry(e Entry, vs y.ValueStruct, db *DB) bool {
 }
 
 func (vlog *valueLog) doRunGC(lf *logFile) error {
-	_, span := otel.Tracer("").Start(context.TODO(), "Badger.GC")
-	span.SetAttributes(attribute.String("GC rewrite for", lf.path))
-	defer span.End()
 	if err := vlog.rewrite(lf); err != nil {
 		return err
 	}
@@ -1100,7 +1086,7 @@ func (vlog *valueLog) runGC(discardRatio float64) error {
 }
 
 func (vlog *valueLog) updateDiscardStats(stats map[uint32]int64) {
-	if vlog.opt.InMemory || vlog.opt.ReadOnly {
+	if vlog.opt.InMemory {
 		return
 	}
 	for fid, discard := range stats {
