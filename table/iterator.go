@@ -11,8 +11,8 @@ import (
 	"io"
 	"sort"
 
-	"github.com/dgraph-io/badger/v4/fb"
-	"github.com/dgraph-io/badger/v4/y"
+	"github.com/kinet-labs/badger/v4/fb"
+	"github.com/kinet-labs/badger/v4/y"
 )
 
 type blockIterator struct {
